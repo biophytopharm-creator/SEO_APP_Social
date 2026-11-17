@@ -1,0 +1,39 @@
+name: Auto Social & SEO Bot
+
+on:
+  schedule:
+    - cron: '0 */3 * * *' # يعمل تلقائياً كل 3 ساعات
+  workflow_dispatch: # يتيح لك تشغيله يدوياً للتجربة في أي وقت
+
+permissions:
+  contents: write
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install libraries
+        run: pip install requests google-generativeai
+
+      - name: Run SEO Bot
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python bot.py
+
+      - name: Save published history
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add published_posts.txt || true
+          git commit -m "Update published posts" || true
+          git push || true
